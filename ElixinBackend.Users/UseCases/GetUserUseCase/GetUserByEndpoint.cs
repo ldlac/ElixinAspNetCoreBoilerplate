@@ -1,6 +1,7 @@
 ﻿using ElixinBackend.Users.UseCases.GetUserUseCase;
 using ElixinBackend.Utils;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,7 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
         {
             endpoints.MapGet("/users/{username}", async (context) =>
             {
-                var username = (context.Request.RouteValues["username"]).ToString();
+                var username = context.Request.RouteValues["username"] as string;
 
                 var mediator = context.RequestServices.GetRequiredService<IMediator>();
 
@@ -29,7 +30,7 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
                 {
                     await context.Response.NotFound(new { ex.Message });
                 }
-            });
+            }).RequireAuthorization();
 
             return endpoints;
         }

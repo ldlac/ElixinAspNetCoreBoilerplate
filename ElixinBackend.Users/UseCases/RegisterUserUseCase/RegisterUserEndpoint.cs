@@ -9,13 +9,11 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
     {
         public static IEndpointRouteBuilder MapRegisterUser(this IEndpointRouteBuilder endpoints)
         {
-            endpoints.MapPost<RegisterUser>("/register", async (serviceProvider, registerUser, response) =>
+            endpoints.MapPost<RegisterUserCommand>("/register", async (serviceProvider, registerUserCommand, response) =>
             {
                 var mediator = serviceProvider.GetRequiredService<IMediator>();
 
-                var command = new RegisterUserCommand() { Username = registerUser.Username, Password = registerUser.Password };
-
-                var user = await mediator.Send(command);
+                var user = await mediator.Send(registerUserCommand);
 
                 await response.Created(user);
             });
