@@ -14,20 +14,20 @@ namespace ElixinBackend.Utils
 {
     public static class HttpExtensions
     {
-        public static void MapPost<T>(this IEndpointRouteBuilder endpoints, string pattern, Func<IServiceProvider, T, HttpResponse, Task> c)
+        public static IEndpointConventionBuilder MapPost<T>(this IEndpointRouteBuilder endpoints, string pattern, Func<IServiceProvider, T, HttpResponse, Task> requestDelegate)
         {
-            endpoints.MapPost(pattern, async context =>
+            return endpoints.MapPost(pattern, async context =>
             {
                 var body = await context.ReadFromJson<T>();
 
-                await c(context.RequestServices, body, context.Response);
+                await requestDelegate(context.RequestServices, body, context.Response);
             });
         }
 
-        public static Task WriteJson<T>(this HttpResponse response, T obj)
+        public static Task WriteJson<T>(this HttpResponse response, T @object)
         {
             response.ContentType = "application/json";
-            var json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+            var json = JsonConvert.SerializeObject(@object, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
             return response.WriteAsync(json);
         }
 
@@ -35,14 +35,12 @@ namespace ElixinBackend.Utils
         {
             using StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8);
 
-            var t = await reader.ReadToEndAsync();
-
-            var obj = JsonConvert.DeserializeObject<T>(t);
+            var @object = JsonConvert.DeserializeObject<T>(await reader.ReadToEndAsync());
 
             var results = new List<ValidationResult>();
-            if (Validator.TryValidateObject(obj, new ValidationContext(obj), results))
+            if (Validator.TryValidateObject(@object, new ValidationContext(@object), results))
             {
-                return obj;
+                return @object;
             }
 
             httpContext.Response.StatusCode = 400;

@@ -42,7 +42,7 @@ namespace ElixinBackend.Users
                     var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
 
                     var usernameClaim = context.Principal.Identity.Name;
-                    if (usernameClaim == null)
+                    if (usernameClaim is null)
                     {
                         context.Fail("Unauthorized");
                     }

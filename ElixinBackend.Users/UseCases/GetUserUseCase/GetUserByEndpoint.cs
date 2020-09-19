@@ -1,7 +1,6 @@
 ﻿using ElixinBackend.Users.UseCases.GetUserUseCase;
 using ElixinBackend.Utils;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;

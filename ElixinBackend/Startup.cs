@@ -46,10 +46,19 @@ namespace ElixinBackend
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app
+                    .UseDeveloperExceptionPage()
+                    .UseDatabaseErrorPage();
+            }
+            else
+            {
+                app
+                    .UseExceptionHandler(err => err.UseCustomErrors(env))
+                    .UseHsts();
             }
 
-            app.UseHttpsRedirection()
+            app
+                .UseHttpsRedirection()
 
                 .UseRouting()
 

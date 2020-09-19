@@ -35,7 +35,7 @@ namespace ElixinBackend.Users.Services
         {
             var user = (await _mediator.Send(GetUserByQuery.New(x => x.Username == username))).FirstOrDefault();
 
-            if (user == null) throw new AuthentificationFailedException();
+            if (user is null) throw new AuthentificationFailedException();
 
             if (!PasswordHelper.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt)) throw new AuthentificationFailedException();
 
