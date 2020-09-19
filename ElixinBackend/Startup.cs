@@ -23,14 +23,11 @@ namespace ElixinBackend
         public void ConfigureServices(IServiceCollection services)
         {
             var appSettingsSection = Configuration.GetSection("AppSettings");
-            services.Configure<AppSettings>(appSettingsSection);
 
             services
-
-                .AddDbContext()
-
+                .Configure<AppSettings>(appSettingsSection)
+                .AddDbContext(Configuration)
                 .AddCors()
-
                 .AddLogging(loggingBuilder =>
                 {
                     loggingBuilder
@@ -38,7 +35,6 @@ namespace ElixinBackend
                         .AddConfiguration(Configuration.GetSection("Logging"))
                         .AddConsole();
                 })
-
                 .AddUsers(appSettingsSection.Get<AppSettings>());
         }
 
@@ -59,23 +55,17 @@ namespace ElixinBackend
 
             app
                 .UseHttpsRedirection()
-
                 .UseRouting()
-
                 .UseCors(x => x
                     .AllowAnyOrigin()
                     .AllowAnyMethod()
                     .AllowAnyHeader())
-
                 .UseAuthentication()
-
                 .UseAuthorization()
-
                 .UseEndpoints(endpoints =>
                 {
                     endpoints.MapUsers();
                 })
-
                 .UseLogInvalidEndpointsMiddleware();
         }
     }

@@ -6,9 +6,9 @@ namespace ElixinBackend.Users
 {
     public static class Endpoints
     {
-        public static void MapUsers(this IEndpointRouteBuilder endpoints)
+        public static IEndpointRouteBuilder MapUsers(this IEndpointRouteBuilder endpoints)
         {
-            endpoints
+            return endpoints
                 .MapRegisterUser()
                 .MapGetUserBy()
                 .MapAuthenticate();

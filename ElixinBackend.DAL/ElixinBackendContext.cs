@@ -1,5 +1,6 @@
 ﻿using ElixinBackend.Users;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal;
 
 /*          Commands
  *
@@ -13,6 +14,8 @@ namespace ElixinBackend.DAL
 {
     public class ElixinBackendContext : DbContext, IUserDbContext
     {
+        private const string DEVELOPMENT_CONNECTION_STRING = "Server=127.0.0.1;Port=5432;Database=ElixinBackend;User Id=postgres;Password=postgres;";
+
         public ElixinBackendContext()
         {
         }
@@ -25,7 +28,10 @@ namespace ElixinBackend.DAL
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=ElixinBackend;User Id=postgres;Password=postgres;");
+            if (optionsBuilder.Options.FindExtension<NpgsqlOptionsExtension>() is null)
+            {
+                optionsBuilder.UseNpgsql(DEVELOPMENT_CONNECTION_STRING);
+            }
         }
     }
 }

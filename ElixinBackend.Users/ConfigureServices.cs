@@ -13,16 +13,21 @@ namespace ElixinBackend.Users
 {
     public static class ConfigureServices
     {
-        public static void AddUsers(this IServiceCollection serviceCollection, AppSettings appSettings)
+        public static IServiceCollection AddUsers(this IServiceCollection serviceCollection, AppSettings appSettings)
+        {
+            return serviceCollection
+                .AddMediatR(typeof(ConfigureServices).GetTypeInfo().Assembly)
+                .AddTransient<IAuthentificationService, AuthentificationService>()
+                .AddAuthorization()
+                .ConfigureAuthentication(appSettings);
+        }
+
+        private static IServiceCollection ConfigureAuthentication(this IServiceCollection serviceCollection, AppSettings appSettings)
         {
             serviceCollection
-                .AddMediatR(typeof(ConfigureServices).GetTypeInfo().Assembly)
-
-                .AddTransient<IAuthentificationService, AuthentificationService>()
-
-                .AddAuthorization()
                 .AddAuthentication(ConfigureAuthenticationOptions)
                 .AddJwtBearer(x => ConfigureJwtBearerOptions(x, appSettings));
+            return serviceCollection;
         }
 
         private static void ConfigureAuthenticationOptions(AuthenticationOptions x)
