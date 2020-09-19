@@ -1,12 +1,15 @@
-﻿using MediatR;
+﻿using ElixinBackend.Shared;
+using ElixinBackend.Users.UseCases.GetUserUseCase;
+using MediatR;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
 {
-    public class RegisterUserCommand : IRequest<UserView>, IValidatableObject
+    public class RegisterUserCommand : IRequest<CommandResponse<UserView>>, IValidatableObject
     {
         [Required]
         public string Username { get; set; }
@@ -22,7 +25,7 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
         }
     }
 
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, UserView>
+    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, CommandResponse<UserView>>
     {
         private readonly IMediator _mediator;
 
@@ -31,15 +34,26 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
             _mediator = mediator;
         }
 
-        public async Task<UserView> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+        public async Task<CommandResponse<UserView>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
             var user = new User(request.Username);
 
-            var query = new RegisterUserQuery(user, request.Password);
+            var isUsernameAlreadyExists = (await _mediator.Send(new GetUserByQuery(x => x.Username == user.Username))).Any();
+            if (isUsernameAlreadyExists)
+            {
+                return CommandResponse<UserView>.FromFailure(RegisterUserCommandException.UsernameAlreadyExists);
+            }
 
-            var userCreated = await _mediator.Send(query);
+            var userCreated = await _mediator.Send(new RegisterUserQuery(user, request.Password));
 
-            return UserView.FromUser(userCreated);
+            var userView = UserView.FromUser(userCreated);
+
+            return CommandResponse<UserView>.FromSuccess(userView);
         }
+    }
+
+    public static class RegisterUserCommandException
+    {
+        public const string UsernameAlreadyExists = "USERNAME.ALREADY.EXISTS";
     }
 }

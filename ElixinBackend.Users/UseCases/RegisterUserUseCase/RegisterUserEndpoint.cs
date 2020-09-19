@@ -13,9 +13,20 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
             {
                 var mediator = serviceProvider.GetRequiredService<IMediator>();
 
-                var user = await mediator.Send(registerUserCommand);
-
-                await response.Created(user);
+                await (await mediator.Send(registerUserCommand))
+                    .Resolve(OnSuccess: async (user) =>
+                    {
+                        await response.Created(user);
+                    },
+                    OnFailure: async (error, user) =>
+                    {
+                        switch (error)
+                        {
+                            case RegisterUserCommandException.UsernameAlreadyExists:
+                                await response.BadRequest(new { Message = error });
+                                break;
+                        }
+                    });
             });
 
             return endpoints;

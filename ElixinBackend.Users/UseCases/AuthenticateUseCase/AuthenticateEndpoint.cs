@@ -2,6 +2,7 @@
 using ElixinBackend.Utils;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using static ElixinBackend.Users.Services.IAuthentificationService;
 
 namespace ElixinBackend.Users.UseCases.AuthenticateUseCase
 {
@@ -11,23 +12,27 @@ namespace ElixinBackend.Users.UseCases.AuthenticateUseCase
         {
             endpoints.MapPost<AuthenticateUser>("/authenticate", async (serviceProvider, authenticateUser, response) =>
             {
-                try
-                {
-                    var authService = serviceProvider.GetRequiredService<IAuthentificationService>();
+                var authService = serviceProvider.GetRequiredService<IAuthentificationService>();
 
-                    var user = await authService.Authenticate(authenticateUser.Username, authenticateUser.Password);
-
-                    var tokenString = authService.GetJwtToken(user);
-
-                    await response.Ok(new
+                await (await authService.Authenticate(authenticateUser.Username, authenticateUser.Password))
+                    .Resolve(OnSuccess: async user =>
                     {
-                        Token = tokenString
+                        var tokenString = authService.GetJwtToken(user);
+
+                        await response.Ok(new
+                        {
+                            Token = tokenString
+                        });
+                    },
+                    OnFailure: async (error, user) =>
+                    {
+                        switch (error)
+                        {
+                            case AuthentificationServiceException.AuthentificationFailed:
+                                await response.BadRequest(new { Message = error });
+                                break;
+                        }
                     });
-                }
-                catch (AuthentificationFailedException ex)
-                {
-                    await response.BadRequest(new { ex.Message });
-                }
             });
 
             return endpoints;

@@ -17,18 +17,20 @@ namespace ElixinBackend.Users.UseCases.RegisterUserUseCase
 
                 var mediator = context.RequestServices.GetRequiredService<IMediator>();
 
-                var command = new GetUserByCommand() { Username = username };
-
-                try
-                {
-                    var user = await mediator.Send(command);
-
-                    await context.Response.Ok(user);
-                }
-                catch (UserNotFoundException ex)
-                {
-                    await context.Response.NotFound(new { ex.Message });
-                }
+                await (await mediator.Send(new FindUserByUsernameCommand() { Username = username }))
+                    .Resolve(OnSuccess: async (user) =>
+                    {
+                        await context.Response.Ok(user);
+                    },
+                    OnFailure: async (error, user) =>
+                    {
+                        switch (error)
+                        {
+                            case FindUserByUsernameCommandException.UserNotFound:
+                                await context.Response.NotFound(new { Message = error });
+                                break;
+                        }
+                    });
             }).RequireAuthorization();
 
             return endpoints;

@@ -1,1 +1,3 @@
-# ElixinAspNetCoreBoilerplate
+# Elixin AspNetCore Boilerplate
+
+Endpoint Routing

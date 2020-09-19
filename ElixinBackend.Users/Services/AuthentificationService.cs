@@ -10,14 +10,20 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static ElixinBackend.Users.Services.IAuthentificationService;
 
 namespace ElixinBackend.Users.Services
 {
     public interface IAuthentificationService
     {
-        Task<User> Authenticate(string username, string password);
+        Task<CommandResponse<User>> Authenticate(string username, string password);
 
         string GetJwtToken(User user);
+
+        public static class AuthentificationServiceException
+        {
+            public const string AuthentificationFailed = "AUTHENTIFICATION.FAILED";
+        }
     }
 
     public class AuthentificationService : IAuthentificationService
@@ -31,15 +37,16 @@ namespace ElixinBackend.Users.Services
             _mediator = mediator;
         }
 
-        public async Task<User> Authenticate(string username, string password)
+        public async Task<CommandResponse<User>> Authenticate(string username, string password)
         {
             var user = (await _mediator.Send(GetUserByQuery.New(x => x.Username == username))).FirstOrDefault();
 
-            if (user is null) throw new AuthentificationFailedException();
+            if (user is null || !PasswordHelper.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                return CommandResponse<User>.FromFailure(AuthentificationServiceException.AuthentificationFailed);
+            }
 
-            if (!PasswordHelper.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt)) throw new AuthentificationFailedException();
-
-            return user;
+            return CommandResponse<User>.FromSuccess(user);
         }
 
         public string GetJwtToken(User user)

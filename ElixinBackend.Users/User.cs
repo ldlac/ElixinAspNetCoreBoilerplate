@@ -12,5 +12,10 @@ namespace ElixinBackend.Users
         public string Username { get; set; }
         public byte[] PasswordHash { get; set; }
         public byte[] PasswordSalt { get; set; }
+
+        public bool IsSame(User other)
+        {
+            return Username == other.Username;
+        }
     }
 }

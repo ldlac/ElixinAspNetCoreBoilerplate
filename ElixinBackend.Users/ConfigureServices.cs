@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ElixinBackend.Users
 {
@@ -52,16 +53,14 @@ namespace ElixinBackend.Users
                         context.Fail("Unauthorized");
                     }
 
-                    try
-                    {
-                        var command = new GetUserByCommand() { Username = usernameClaim };
+                    var command = new FindUserByUsernameCommand() { Username = usernameClaim };
 
-                        await mediator.Send(command);
-                    }
-                    catch (UserNotFoundException)
-                    {
-                        context.Fail("Unauthorized");
-                    }
+                    await (await mediator.Send(command))
+                        .Resolve(OnFailure: async (error, user) =>
+                        {
+                            context.Fail("Unauthorized");
+                            await Task.CompletedTask;
+                        });
                 }
             };
             x.RequireHttpsMetadata = false;
