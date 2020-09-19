@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using ElixinBackend.DAL;
 using ElixinBackend.Shared;
 using Microsoft.Extensions.Logging;
+using ElixinBackend.Middlewares;
 
 namespace ElixinBackend
 {
@@ -30,10 +31,12 @@ namespace ElixinBackend
 
                 .AddCors()
 
-                .AddLogging(o =>
+                .AddLogging(loggingBuilder =>
                 {
-                    o.AddConfiguration(Configuration.GetSection("Logging"));
-                    o.AddConsole();
+                    loggingBuilder
+                        .ClearProviders()
+                        .AddConfiguration(Configuration.GetSection("Logging"))
+                        .AddConsole();
                 })
 
                 .AddUsers(appSettingsSection.Get<AppSettings>());
@@ -62,7 +65,9 @@ namespace ElixinBackend
                 .UseEndpoints(endpoints =>
                 {
                     endpoints.MapUsers();
-                });
+                })
+
+                .UseLogInvalidEndpointsMiddleware();
         }
     }
 }
